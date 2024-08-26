@@ -82,6 +82,28 @@ class IslandFactory {
         $island->save();
         SkyBlock::getInstance()->getIslandManager()->closeIsland($island);
         (new IslandDisbandEvent($island))->call();
+
+        $worldPath = Server::getInstance()->getDataPath() . "worlds/" . $world->getFolderName();
+        self::deleteDirectory($worldPath);
     }
+
+    	private static function deleteDirectory(string $dirPath): void
+	{
+		if (!is_dir($dirPath)) {
+			return;
+		}
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($dirPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($files as $fileinfo) {
+			$todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+			$todo($fileinfo->getRealPath());
+		}
+
+		rmdir($dirPath);
+	}
 
 }
